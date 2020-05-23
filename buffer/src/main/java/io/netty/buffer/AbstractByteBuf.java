@@ -188,24 +188,36 @@ public abstract class AbstractByteBuf extends ByteBuf {
         return maxCapacity() - writerIndex;
     }
 
+    /**
+     * 将当前的readerIndex设置到markedReaderIndex中
+     */
     @Override
     public ByteBuf markReaderIndex() {
         markedReaderIndex = readerIndex;
         return this;
     }
 
+    /**
+     * 将markedReaderIndex恢复到readerIndex中
+     */
     @Override
     public ByteBuf resetReaderIndex() {
         readerIndex(markedReaderIndex);
         return this;
     }
 
+    /**
+     * 将当前的writerIndex设置到markedWriterIndex中
+     */
     @Override
     public ByteBuf markWriterIndex() {
         markedWriterIndex = writerIndex;
         return this;
     }
 
+    /**
+     * 将markedReaderIndex恢复到readerIndex中
+     */
     @Override
     public ByteBuf resetWriterIndex() {
         writerIndex(markedWriterIndex);
@@ -220,6 +232,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
         }
 
         if (readerIndex != writerIndex) {
+            // 丢弃掉discard bytes，会产生内存复制操作
             setBytes(0, this, readerIndex, writerIndex - readerIndex);
             writerIndex -= readerIndex;
             adjustMarkers(readerIndex);
@@ -982,6 +995,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     @Override
     public ByteBuf writeByte(int value) {
+        // 在写入数据时，判断是否可写，如果空间不足，则进行扩容
         ensureWritable0(1);
         _setByte(writerIndex++, value);
         return this;

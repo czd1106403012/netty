@@ -290,6 +290,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return addAfter(null, baseName, name, handler);
     }
 
+    /**
+     * 对逻辑进行添加
+     */
     @Override
     public final ChannelPipeline addAfter(
             EventExecutorGroup group, String baseName, String name, ChannelHandler handler) {

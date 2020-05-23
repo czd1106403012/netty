@@ -74,6 +74,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             AtomicReferenceFieldUpdater.newUpdater(
                     SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
 
+    // 线程是通过队列进行保存的，不是通过java的线程池保存的
     private final Queue<Runnable> taskQueue;
 
     private volatile Thread thread;
@@ -986,6 +987,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 boolean success = false;
                 updateLastExecutionTime();
                 try {
+                    // 执行注册
                     SingleThreadEventExecutor.this.run();
                     success = true;
                 } catch (Throwable t) {

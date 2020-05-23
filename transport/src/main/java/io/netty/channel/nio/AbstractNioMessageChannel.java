@@ -90,15 +90,18 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 int size = readBuf.size();
                 for (int i = 0; i < size; i ++) {
                     readPending = false;
+                    // readBuf中存放的是OP_ACCEPT事件连接过来的所有的SocketChannel
                     pipeline.fireChannelRead(readBuf.get(i));
                 }
                 readBuf.clear();
+                // 执行读写完成事件
                 allocHandle.readComplete();
                 pipeline.fireChannelReadComplete();
 
                 if (exception != null) {
                     closed = closeOnReadError(exception);
 
+                    // 执行读写异常事件
                     pipeline.fireExceptionCaught(exception);
                 }
 

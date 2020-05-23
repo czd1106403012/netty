@@ -86,6 +86,8 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance using the given {@link ServerSocketChannel}.
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
+        // 1. 初始化channel，将channel感兴趣的时间设置为OP_ACCEPT
+        // 2. 新建了一个DefaultChannelPipeline
         super(null, channel, SelectionKey.OP_ACCEPT);
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
     }
@@ -148,6 +150,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
         try {
             if (ch != null) {
+                // 新注册一个NioSocketChannel，并关注Read事件
                 buf.add(new NioSocketChannel(this, ch));
                 return 1;
             }

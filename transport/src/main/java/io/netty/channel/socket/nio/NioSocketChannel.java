@@ -102,6 +102,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
      * @param socket    the {@link SocketChannel} which will be used
      */
     public NioSocketChannel(Channel parent, SocketChannel socket) {
+        // 将channle感兴趣的事件设置为OP_READ
         super(parent, socket);
         config = new NioSocketChannelConfig(this, socket.socket());
     }
