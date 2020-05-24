@@ -149,12 +149,13 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             @Override
             public void initChannel(final Channel ch) {
                 final ChannelPipeline pipeline = ch.pipeline();
+                // 添加用户自定义的handler，这里是handler，不是childHandler，handler处理Boss线程，childHandler处理worker线程
                 ChannelHandler handler = config.handler();
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
 
-                // 当channel注册时会调用这里，将childHandler加进去
+                // 当channel注册时会调用这里，将childHandler加进去，并将属性也设置进去
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {

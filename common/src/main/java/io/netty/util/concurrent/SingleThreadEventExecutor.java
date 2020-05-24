@@ -374,7 +374,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         boolean ranAtLeastOne = false;
 
         do {
+            // 将scheduledTaskQueue聚合到taskQueue中
             fetchedAll = fetchFromScheduledTaskQueue();
+            // 执行所有的任务
             if (runAllTasksFrom(taskQueue)) {
                 ranAtLeastOne = true;
             }
@@ -826,7 +828,10 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     private void execute(Runnable task, boolean immediate) {
         boolean inEventLoop = inEventLoop();
+        // 将任务(例如，bind方法)添加到队列中，
         addTask(task);
+        // 判断是否在eventLoop的线程，在开始的时候，还没有创建线程，显然是不等的
+        // 在第一个线程会进入下面的if，if里面也会新建一个线程for循环执行select，和runAllTask
         if (!inEventLoop) {
             startThread();
             if (isShutdown()) {

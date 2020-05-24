@@ -71,6 +71,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     protected AbstractChannel(Channel parent) {
         this.parent = parent;
         id = newId();
+        // unsafe用于操作channel底层数据
         unsafe = newUnsafe();
         pipeline = newChannelPipeline();
     }
@@ -462,9 +463,11 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 return;
             }
 
+            // 赋值eventLoop，后续的操作交给eventLoop处理
             AbstractChannel.this.eventLoop = eventLoop;
 
             if (eventLoop.inEventLoop()) {
+                // 实际的注册
                 register0(promise);
             } else {
                 try {
@@ -525,6 +528,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
         }
 
+        /**
+         * 绑定端口号
+         */
         @Override
         public final void bind(final SocketAddress localAddress, final ChannelPromise promise) {
             assertEventLoop();

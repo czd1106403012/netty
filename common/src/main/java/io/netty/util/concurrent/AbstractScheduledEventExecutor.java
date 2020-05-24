@@ -253,8 +253,10 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
 
     private <V> ScheduledFuture<V> schedule(final ScheduledFutureTask<V> task) {
         if (inEventLoop()) {
+            // 如果是在当前的eventLoop则直接添加
             scheduleFromEventLoop(task);
         } else {
+            // 如果不是，则封装成taskQueue中的任务去添加
             final long deadlineNanos = task.deadlineNanos();
             // task will add itself to scheduled task queue when run if not expired
             if (beforeScheduledTaskSubmitted(deadlineNanos)) {

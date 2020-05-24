@@ -227,11 +227,13 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private void invokeChannelActive() {
         if (invokeHandler()) {
             try {
+                // 会调用DefaultChannelPipeline.HeadContext.channelActive
                 ((ChannelInboundHandler) handler()).channelActive(this);
             } catch (Throwable t) {
                 invokeExceptionCaught(t);
             }
         } else {
+            // 调用下一个handler的channelActive方法
             fireChannelActive();
         }
     }
@@ -504,6 +506,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private void invokeBind(SocketAddress localAddress, ChannelPromise promise) {
         if (invokeHandler()) {
             try {
+                // 调用的是HeadContext的bind方法
                 ((ChannelOutboundHandler) handler()).bind(this, localAddress, promise);
             } catch (Throwable t) {
                 notifyOutboundHandlerException(t, promise);

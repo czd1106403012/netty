@@ -205,12 +205,14 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
 
         final Class<?> selectorImplClass = (Class<?>) maybeSelectorImplClass;
+        // 使用数组优化，在jdk的底层使用的是Hashset的方式
         final SelectedSelectionKeySet selectedKeySet = new SelectedSelectionKeySet();
 
         Object maybeException = AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
             public Object run() {
                 try {
+                    // 这里是SelectorImpl.selectedKeys，其属性是HashSet
                     Field selectedKeysField = selectorImplClass.getDeclaredField("selectedKeys");
                     Field publicSelectedKeysField = selectorImplClass.getDeclaredField("publicSelectedKeys");
 
@@ -240,6 +242,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         return cause;
                     }
 
+                    // 通过设置字段的方式将优化后的SelectedKeySet(数组实现)，替换掉由HashSet实现的
                     selectedKeysField.set(unwrappedSelector, selectedKeySet);
                     publicSelectedKeysField.set(unwrappedSelector, selectedKeySet);
                     return null;
@@ -257,6 +260,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             logger.trace("failed to instrument a special java.util.Set into: {}", unwrappedSelector, e);
             return new SelectorTuple(unwrappedSelector);
         }
+        // 保存为成员变量
         selectedKeys = selectedKeySet;
         logger.trace("instrumented a special java.util.Set into: {}", unwrappedSelector);
         return new SelectorTuple(unwrappedSelector,
@@ -468,6 +472,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 } catch (IOException e) {
                     // If we receive an IOException here its because the Selector is messed up. Let's rebuild
                     // the selector and retry. https://github.com/netty/netty/issues/8566
+                    // 创建一个selector，将老的属性赋值给新的selector
                     rebuildSelector0();
                     selectCnt = 0;
                     handleLoopException(e);
@@ -479,8 +484,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 needsToSelectAgain = false;
                 final int ioRatio = this.ioRatio;
                 boolean ranTasks;
+                // ioRatio控制processSelectedKeys(处理读写事件)、runAllTasks(外部线程的任务)的处理时间
+                // ioRatio默认是50，processSelectedKeys:runAllTasks = 1:1
                 if (ioRatio == 100) {
                     try {
+                        // strategy在这里表示已经有多少个就绪的key，所以需要处理就绪的key
                         if (strategy > 0) {
                             // 处理key
                             processSelectedKeys();
@@ -496,19 +504,21 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     } finally {
                         // Ensure we always run tasks.
                         final long ioTime = System.nanoTime() - ioStartTime;
+                        // 这里控制
                         ranTasks = runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
                     }
                 } else {
                     ranTasks = runAllTasks(0); // This will run the minimum number of tasks
                 }
 
+                // 表示不是空轮训
                 if (ranTasks || strategy > 0) {
                     if (selectCnt > MIN_PREMATURE_SELECTOR_RETURNS && logger.isDebugEnabled()) {
                         logger.debug("Selector.select() returned prematurely {} times in a row for Selector {}.",
                                 selectCnt - 1, selector);
                     }
                     selectCnt = 0;
-                } else if (unexpectedSelectorWakeup(selectCnt)) { // Unexpected wakeup (unusual case)
+                } else if (unexpectedSelectorWakeup(selectCnt)) { // Unexpected wakeup (unusual case) 解决jdk 空轮训的bug
                     selectCnt = 0;
                 }
             } catch (CancelledKeyException e) {
@@ -549,12 +559,14 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
             return true;
         }
+        // selectCnt表示空轮训的次数
         if (SELECTOR_AUTO_REBUILD_THRESHOLD > 0 &&
                 selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD) {
             // The selector returned prematurely many times in a row.
             // Rebuild the selector to work around the problem.
             logger.warn("Selector.select() returned prematurely {} times in a row; rebuilding Selector {}.",
                     selectCnt, selector);
+            // 解决jdk nio空轮训的bug，重建selector，将老的selector的属性赋值给新的
             rebuildSelector();
             return true;
         }
@@ -644,8 +656,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             final SelectionKey k = selectedKeys.keys[i];
             // null out entry in the array to allow to have it GC'ed once the Channel close
             // See https://github.com/netty/netty/issues/2363
+            // 协议gc
             selectedKeys.keys[i] = null;
 
+            // 绑定的是netty封装好的channel
             final Object a = k.attachment();
 
             if (a instanceof AbstractNioChannel) {
