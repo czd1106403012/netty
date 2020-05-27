@@ -378,7 +378,8 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private void invokeChannelRead(Object msg) {
         if (invokeHandler()) {
             try {
-                // 第一个是ServerBootstrapAcceptor
+                // 在boss group中是head->ServerBootstrapAcceptor->tail
+                // 在worker group中是head->自定义ChannelHandler->tail
                 ((ChannelInboundHandler) handler()).channelRead(this, msg);
             } catch (Throwable t) {
                 invokeExceptionCaught(t);
@@ -785,9 +786,11 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             throw e;
         }
 
+        // 从尾结点开始找
         final AbstractChannelHandlerContext next = findContextOutbound(flush ?
                 (MASK_WRITE | MASK_FLUSH) : MASK_WRITE);
         final Object m = pipeline.touch(msg, next);
+        // 找到channel对应EventLoop
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
             if (flush) {

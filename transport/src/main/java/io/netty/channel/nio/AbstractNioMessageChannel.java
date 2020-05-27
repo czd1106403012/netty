@@ -87,6 +87,8 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                     exception = t;
                 }
 
+                // 如果是boss group，则pipeline是 head <->  ServerBootstrapAcceptor <->  tail
+                // 一次调用pipeline中的handlerRead方法，ServerBootstrapAcceptor将注册
                 int size = readBuf.size();
                 for (int i = 0; i < size; i ++) {
                     readPending = false;

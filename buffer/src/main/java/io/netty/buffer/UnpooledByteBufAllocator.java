@@ -80,7 +80,9 @@ public final class UnpooledByteBufAllocator extends AbstractByteBufAllocator imp
     @Override
     protected ByteBuf newHeapBuffer(int initialCapacity, int maxCapacity) {
         return PlatformDependent.hasUnsafe() ?
+                // 使用unsafe分配内存
                 new InstrumentedUnpooledUnsafeHeapByteBuf(this, initialCapacity, maxCapacity) :
+                // 直接使用byte数据分配内存
                 new InstrumentedUnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
     }
 
@@ -88,9 +90,11 @@ public final class UnpooledByteBufAllocator extends AbstractByteBufAllocator imp
     protected ByteBuf newDirectBuffer(int initialCapacity, int maxCapacity) {
         final ByteBuf buf;
         if (PlatformDependent.hasUnsafe()) {
+            // 使用nio的ByteBuffer获取内存，并通过unsafe计算内存地址，每次通过内存地址读写
             buf = noCleaner ? new InstrumentedUnpooledUnsafeNoCleanerDirectByteBuf(this, initialCapacity, maxCapacity) :
                     new InstrumentedUnpooledUnsafeDirectByteBuf(this, initialCapacity, maxCapacity);
         } else {
+            // 使用nio的ByteBuffer分配内存
             buf = new InstrumentedUnpooledDirectByteBuf(this, initialCapacity, maxCapacity);
         }
         return disableLeakDetector ? buf : toLeakAwareBuffer(buf);

@@ -9,7 +9,7 @@ import io.netty.util.CharsetUtil;
 /**
  * 自定义Handler需要继承netty规定好的某个HandlerAdapter(规范)
  */
-public class NettyServerHandler extends ChannelInboundHandlerAdapter {
+public class NettyServerHandler2 extends ChannelInboundHandlerAdapter {
 
     /**
      * 读取客户端发送的数据
@@ -20,14 +20,12 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        System.out.println("服务器读取线程1 " + Thread.currentThread().getName());
+        System.out.println("服务器读取线程2 " + Thread.currentThread().getName());
         //Channel channel = ctx.channel();
         //ChannelPipeline pipeline = ctx.pipeline(); //本质是一个双向链接, 出站入站
         //将 msg 转成一个 ByteBuf，类似NIO 的 ByteBuffer
         ByteBuf buf = (ByteBuf) msg;
-        System.out.println("客户端发送消息是1:" + buf.toString(CharsetUtil.UTF_8));
-        ctx.fireChannelRead(msg);  // 将消息向后面传递
-//        ctx.pipeline().fireChannelRead(msg); // 将消息从head开始传递
+        System.out.println("客户端发送消息是2:" + buf.toString(CharsetUtil.UTF_8));
     }
 
     /**
@@ -38,7 +36,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        ByteBuf buf = Unpooled.copiedBuffer("HelloClient1".getBytes(CharsetUtil.UTF_8));
+        ByteBuf buf = Unpooled.copiedBuffer("HelloClient2".getBytes(CharsetUtil.UTF_8));
         ctx.writeAndFlush(buf);
     }
 

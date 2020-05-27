@@ -497,12 +497,14 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     return;
                 }
                 boolean firstRegistration = neverRegistered;
+                // 注册channel到seletor上
                 doRegister();
                 neverRegistered = false;
                 registered = true;
 
                 // Ensure we call handlerAdded(...) before we actually notify the promise. This is needed as the
                 // user may already fire events through the pipeline in the ChannelFutureListener.
+                // 执行handlerAdd方法
                 pipeline.invokeHandlerAddedIfNeeded();
 
                 safeSetSuccess(promise);
@@ -511,6 +513,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 // multiple channel actives if the channel is deregistered and re-registered.
                 if (isActive()) {
                     if (firstRegistration) {
+                        // 注册感兴趣的时间到selectKey上
                         pipeline.fireChannelActive();
                     } else if (config().isAutoRead()) {
                         // This channel was registered before and autoRead() is set. This means we need to begin read

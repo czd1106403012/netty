@@ -743,6 +743,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
     public byte readByte() {
         checkReadableBytes0(1);
         int i = readerIndex;
+        // 由子类实现
         byte b = _getByte(i);
         readerIndex = i + 1;
         return b;
@@ -997,6 +998,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
     public ByteBuf writeByte(int value) {
         // 在写入数据时，判断是否可写，如果空间不足，则进行扩容
         ensureWritable0(1);
+        // _setByte由子类实现
         _setByte(writerIndex++, value);
         return this;
     }
